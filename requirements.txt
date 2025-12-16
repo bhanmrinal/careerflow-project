@@ -1,0 +1,52 @@
+# FastAPI and Web
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+websockets>=12.0,<14.0
+
+# LangChain and AI
+langchain>=1.0.0
+langchain-community>=0.3.0
+langchain-core>=0.3.15
+langchain-chroma>=0.1.0
+langchain-groq>=0.2.0
+langchain-openai>=1.0.0
+
+# Groq (for Llama 3.3, Mixtral)
+groq>=0.11.0
+
+# HuggingFace (optional local models)
+huggingface-hub>=0.24.0
+sentence-transformers>=2.7.0
+
+# Vector Database
+chromadb>=0.5.0
+
+# Firebase
+firebase-admin>=6.5.0
+
+# Document Processing
+pypdf>=4.0.0
+python-docx>=1.1.0
+pdfplumber>=0.11.0
+
+# Web Scraping and Research
+httpx>=0.27.0
+beautifulsoup4>=4.12.0
+duckduckgo-search>=6.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+
+# Core dependencies (pinned for compatibility)
+pillow>=10.3.0,<11.0.0
+tiktoken>=0.7.0,<0.8.0
+openai>=1.45.0
+requests>=2.32.2
+tqdm>=4.66.3
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.24.0
