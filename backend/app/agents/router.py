@@ -8,13 +8,13 @@ based on intent classification and conversation context.
 import re
 from typing import Any, Optional
 
-from backend.app.core.llm import get_llm
-from backend.app.models.conversation import Conversation, AgentType
-from backend.app.models.resume import Resume
-from backend.app.agents.base import BaseAgent, AgentResult
-from backend.app.agents.company_research import CompanyResearchAgent
-from backend.app.agents.job_matching import JobMatchingAgent
-from backend.app.agents.translation import TranslationAgent
+from app.core.llm import get_llm
+from app.models.conversation import Conversation, AgentType
+from app.models.resume import Resume
+from app.agents.base import BaseAgent, AgentResult
+from app.agents.company_research import CompanyResearchAgent
+from app.agents.job_matching import JobMatchingAgent
+from app.agents.translation import TranslationAgent
 
 
 class ConversationRouter:

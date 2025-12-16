@@ -8,9 +8,9 @@ formatting and content for different cultural contexts.
 import re
 from typing import Any, Optional
 
-from backend.app.agents.base import BaseAgent, AgentResult
-from backend.app.models.resume import Resume
-from backend.app.models.conversation import Conversation, AgentType
+from app.agents.base import BaseAgent, AgentResult
+from app.models.resume import Resume
+from app.models.conversation import Conversation, AgentType
 
 
 class TranslationAgent(BaseAgent):

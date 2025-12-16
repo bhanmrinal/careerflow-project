@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import BinaryIO
 from uuid import uuid4
 
-from backend.app.core.config import get_settings
-from backend.app.core.llm import get_llm
-from backend.app.models.resume import Resume, ResumeSection, SectionType
+from app.core.config import get_settings
+from app.core.llm import get_llm
+from app.models.resume import Resume, ResumeSection, SectionType
 
 
 class ResumeParserService:

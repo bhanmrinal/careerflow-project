@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional, Any
 from pydantic import BaseModel, Field
 
-from backend.app.models.conversation import AgentType
+from app.models.conversation import AgentType
 
 
 class ResumeChange(BaseModel):

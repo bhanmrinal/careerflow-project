@@ -90,36 +90,37 @@ A conversational AI system for resume optimization using specialized agents. Bui
 ```
 careerflow-project/
 ├── backend/
-│   └── app/
-│       ├── agents/                 # Specialized AI agents
-│       │   ├── base.py            # Base agent class
-│       │   ├── company_research.py # Company research agent
-│       │   ├── job_matching.py    # Job matching agent
-│       │   ├── translation.py     # Translation agent
-│       │   └── router.py          # Conversation router
-│       ├── api/
-│       │   └── routes/            # API endpoints
-│       │       ├── chat.py        # Chat endpoints
-│       │       ├── resume.py      # Resume endpoints
-│       │       └── conversation.py # Conversation endpoints
-│       ├── core/
-│       │   ├── config.py          # Application configuration
-│       │   └── llm.py             # LLM factory
-│       ├── models/                # Pydantic models
-│       │   ├── resume.py          # Resume models
-│       │   ├── conversation.py    # Conversation models
-│       │   └── chat.py            # Chat request/response models
-│       ├── services/              # Business logic services
-│       │   ├── resume_parser.py   # PDF/DOCX parsing
-│       │   ├── firebase_service.py # Firebase operations
-│       │   └── vector_store.py    # ChromaDB operations
-│       └── main.py                # FastAPI application
+│   ├── app/
+│   │   ├── agents/                 # Specialized AI agents
+│   │   │   ├── base.py            # Base agent class
+│   │   │   ├── company_research.py # Company research agent
+│   │   │   ├── job_matching.py    # Job matching agent
+│   │   │   ├── translation.py     # Translation agent
+│   │   │   └── router.py          # Conversation router
+│   │   ├── api/
+│   │   │   └── routes/            # API endpoints
+│   │   │       ├── chat.py        # Chat endpoints
+│   │   │       ├── resume.py      # Resume endpoints
+│   │   │       └── conversation.py # Conversation endpoints
+│   │   ├── core/
+│   │   │   ├── config.py          # Application configuration
+│   │   │   └── llm.py             # LLM factory
+│   │   ├── models/                # Pydantic models
+│   │   │   ├── resume.py          # Resume models
+│   │   │   ├── conversation.py    # Conversation models
+│   │   │   └── chat.py            # Chat request/response models
+│   │   ├── services/              # Business logic services
+│   │   │   ├── resume_parser.py   # PDF/DOCX parsing
+│   │   │   ├── firebase_service.py # Firebase operations
+│   │   │   └── vector_store.py    # ChromaDB operations
+│   │   └── main.py                # FastAPI application
+│   └── run.py                     # Entry point
 ├── frontend/
 │   ├── index.html                 # Main HTML
 │   ├── styles.css                 # Styles
 │   └── app.js                     # Frontend JavaScript
 ├── requirements.txt               # Python dependencies
-├── run.py                         # Entry point
+├── pyproject.toml                 # Project configuration
 └── README.md                      # This file
 ```
 
@@ -185,6 +186,7 @@ careerflow-project/
 5. **Run the application**
 
    ```bash
+   cd backend
    python run.py
    ```
 
@@ -362,4 +364,3 @@ The project includes `railway.json` and `Procfile` for automatic configuration:
 - [ ] Integrate with job boards for automatic matching
 - [ ] Add resume templates and formatting options
 - [ ] Implement caching for company research
-

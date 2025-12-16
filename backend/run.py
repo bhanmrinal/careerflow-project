@@ -3,14 +3,15 @@ Entry point for running the Careerflow Resume Optimization System.
 """
 
 import uvicorn
-from backend.app.core.config import get_settings
+from app.core.config import get_settings
 
 
 def main():
     """Run the application."""
     settings = get_settings()
 
-    print("""
+    print(
+        """
     ╔═══════════════════════════════════════════════════════════════╗
     ║                                                               ║
     ║   🚀 Careerflow Resume Optimization System                    ║
@@ -18,7 +19,8 @@ def main():
     ║   A conversational AI system for resume optimization          ║
     ║                                                               ║
     ╚═══════════════════════════════════════════════════════════════╝
-    """)
+    """
+    )
 
     print(f"📍 Server: http://{settings.host}:{settings.port}")
     print(f"📚 API Docs: http://{settings.host}:{settings.port}/docs")
@@ -27,7 +29,7 @@ def main():
     print()
 
     uvicorn.run(
-        "backend.app.main:app",
+        "app.main:app",
         host=settings.host,
         port=settings.port,
         reload=settings.app_debug,

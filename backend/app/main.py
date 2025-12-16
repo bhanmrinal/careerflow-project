@@ -11,8 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 
-from backend.app.core.config import get_settings
-from backend.app.api.routes import chat_router, resume_router, conversation_router
+from app.core.config import get_settings
+from app.api.routes import chat_router, resume_router, conversation_router
 
 
 @asynccontextmanager
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     settings = get_settings()
     uvicorn.run(
-        "backend.app.main:app",
+        "app.main:app",
         host=settings.host,
         port=settings.port,
         reload=settings.app_debug,

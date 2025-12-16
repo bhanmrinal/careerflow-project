@@ -12,9 +12,9 @@ from typing import Any, Optional
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
-from backend.app.core.llm import get_llm
-from backend.app.models.resume import Resume, ResumeSection
-from backend.app.models.conversation import Conversation, AgentType
+from app.core.llm import get_llm
+from app.models.resume import Resume, ResumeSection
+from app.models.conversation import Conversation, AgentType
 
 
 @dataclass
@@ -150,7 +150,7 @@ class BaseAgent(ABC):
             List of updated ResumeSection objects.
         """
         import re
-        from backend.app.models.resume import SectionType
+        from app.models.resume import SectionType
 
         sections = []
         section_pattern = r"##\s*(.+?)\n([\s\S]*?)(?=##\s*|\Z)"

@@ -6,8 +6,8 @@ Handles conversation history and management.
 
 from fastapi import APIRouter, HTTPException
 
-from backend.app.models.chat import ConversationHistoryResponse
-from backend.app.services.firebase_service import get_storage_service
+from app.models.chat import ConversationHistoryResponse
+from app.services.firebase_service import get_storage_service
 
 router = APIRouter(prefix="/conversation", tags=["conversation"])
 

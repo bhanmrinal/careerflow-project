@@ -10,7 +10,7 @@ from typing import Optional
 from langchain_core.language_models import BaseChatModel
 from langchain_core.embeddings import Embeddings
 
-from backend.app.core.config import Settings, LLMProvider, get_settings
+from app.core.config import Settings, LLMProvider, get_settings
 
 
 class LLMFactory:

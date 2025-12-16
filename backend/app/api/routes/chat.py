@@ -9,15 +9,15 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
 
-from backend.app.models.chat import ChatRequest, ChatResponse, AgentAction
-from backend.app.models.conversation import (
+from app.models.chat import ChatRequest, ChatResponse, AgentAction
+from app.models.conversation import (
     Message,
     MessageRole,
     Conversation,
     AgentType,
 )
-from backend.app.agents.router import ConversationRouter
-from backend.app.services.firebase_service import (
+from app.agents.router import ConversationRouter
+from app.services.firebase_service import (
     get_storage_service,
 )
 
@@ -143,7 +143,7 @@ async def send_message(request: ChatRequest):
 
     resume_changes = []
     for change in result.changes:
-        from backend.app.models.chat import ResumeChange
+        from app.models.chat import ResumeChange
 
         resume_changes.append(
             ResumeChange(

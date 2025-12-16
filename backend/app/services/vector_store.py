@@ -10,9 +10,9 @@ from uuid import uuid4
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 
-from backend.app.core.config import get_settings
-from backend.app.core.llm import get_embeddings
-from backend.app.models.resume import Resume
+from app.core.config import get_settings
+from app.core.llm import get_embeddings
+from app.models.resume import Resume
 
 
 class VectorStoreService:

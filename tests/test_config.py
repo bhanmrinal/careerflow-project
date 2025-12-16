@@ -1,6 +1,6 @@
 """Tests for configuration module."""
 
-from backend.app.core.config import Settings, LLMProvider
+from app.core.config import Settings, LLMProvider
 
 
 def test_settings_defaults():

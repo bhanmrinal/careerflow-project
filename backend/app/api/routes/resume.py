@@ -6,14 +6,14 @@ Handles resume upload, parsing, and version management.
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 
-from backend.app.models.chat import (
+from app.models.chat import (
     FileUploadResponse,
     ResumeVersionResponse,
     VersionCompareResponse,
 )
-from backend.app.services.resume_parser import ResumeParserService
-from backend.app.services.firebase_service import get_storage_service
-from backend.app.services.vector_store import VectorStoreService
+from app.services.resume_parser import ResumeParserService
+from app.services.firebase_service import get_storage_service
+from app.services.vector_store import VectorStoreService
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 

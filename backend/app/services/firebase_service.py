@@ -9,14 +9,14 @@ from datetime import datetime
 from typing import Optional
 from uuid import uuid4
 
-from backend.app.core.config import get_settings
-from backend.app.models.conversation import (
+from app.core.config import get_settings
+from app.models.conversation import (
     Conversation,
     Message,
     MessageRole,
     AgentType,
 )
-from backend.app.models.resume import Resume, ResumeVersion, ResumeSection
+from app.models.resume import Resume, ResumeVersion, ResumeSection
 
 
 class FirebaseService:
@@ -342,7 +342,7 @@ class FirebaseService:
 
     def _dict_to_section(self, data: dict) -> ResumeSection:
         """Convert dictionary to ResumeSection."""
-        from backend.app.models.resume import SectionType
+        from app.models.resume import SectionType
 
         return ResumeSection(
             section_type=SectionType(data["section_type"]),

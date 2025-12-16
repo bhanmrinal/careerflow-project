@@ -1,8 +1,8 @@
 """Tests for data models."""
 
 from datetime import datetime
-from backend.app.models.resume import Resume, ResumeSection, SectionType
-from backend.app.models.conversation import (
+from app.models.resume import Resume, ResumeSection, SectionType
+from app.models.conversation import (
     Conversation,
     Message,
     MessageRole,
