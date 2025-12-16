@@ -5,11 +5,11 @@ Researches target companies using web APIs and optimizes resume content
 to match company culture, values, and hiring patterns.
 """
 
-from typing import Any, Optional
+from typing import Any
 
-from app.agents.base import BaseAgent, AgentResult
+from app.agents.base import AgentResult, BaseAgent
+from app.models.conversation import AgentType, Conversation
 from app.models.resume import Resume
-from app.models.conversation import Conversation, AgentType
 from app.services.vector_store import VectorStoreService
 
 
@@ -124,7 +124,7 @@ Always explain your reasoning and the specific changes made."""
             metadata={"target_company": target_company, "company_info": company_info},
         )
 
-    def _extract_company_name(self, message: str) -> Optional[str]:
+    def _extract_company_name(self, message: str) -> str | None:
         """Extract company name from user message."""
         import re
 

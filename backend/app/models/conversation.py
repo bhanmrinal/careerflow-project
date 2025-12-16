@@ -2,7 +2,8 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -30,12 +31,12 @@ class Message(BaseModel):
     id: str
     role: MessageRole
     content: str
-    agent_type: Optional[AgentType] = None
+    agent_type: AgentType | None = None
     metadata: dict = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # For tracking agent reasoning and actions
-    reasoning: Optional[str] = None
+    reasoning: str | None = None
     actions_taken: list[dict] = Field(default_factory=list)
 
 
@@ -44,7 +45,7 @@ class Conversation(BaseModel):
 
     id: str
     user_id: str
-    resume_id: Optional[str] = None
+    resume_id: str | None = None
     messages: list[Message] = Field(default_factory=list)
     current_resume_version: int = 1
     context: dict[str, Any] = Field(default_factory=dict)
@@ -56,7 +57,7 @@ class Conversation(BaseModel):
         self.messages.append(message)
         self.updated_at = datetime.utcnow()
 
-    def get_history(self, limit: Optional[int] = None) -> list[Message]:
+    def get_history(self, limit: int | None = None) -> list[Message]:
         """Get conversation history, optionally limited to recent messages."""
         if limit:
             return self.messages[-limit:]

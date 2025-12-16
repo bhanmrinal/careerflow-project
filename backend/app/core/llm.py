@@ -5,18 +5,15 @@ Provides a unified interface for creating LLM instances across different provide
 Supports Groq (Llama 3.3, Mixtral), HuggingFace, and Ollama.
 """
 
-from typing import Optional
-
-from langchain_core.language_models import BaseChatModel
+from app.core.config import LLMProvider, Settings, get_settings
 from langchain_core.embeddings import Embeddings
-
-from app.core.config import Settings, LLMProvider, get_settings
+from langchain_core.language_models import BaseChatModel
 
 
 class LLMFactory:
     """Factory class for creating LLM and embedding instances."""
 
-    def __init__(self, settings: Optional[Settings] = None):
+    def __init__(self, settings: Settings | None = None):
         self.settings = settings or get_settings()
 
     def create_llm(self, temperature: float = 0.7) -> BaseChatModel:

@@ -6,11 +6,11 @@ formatting and content for different cultural contexts.
 """
 
 import re
-from typing import Any, Optional
+from typing import Any
 
-from app.agents.base import BaseAgent, AgentResult
+from app.agents.base import AgentResult, BaseAgent
+from app.models.conversation import AgentType, Conversation
 from app.models.resume import Resume
-from app.models.conversation import Conversation, AgentType
 
 
 class TranslationAgent(BaseAgent):
@@ -243,7 +243,7 @@ Your resume has been translated and localized. Review the changes below:"""
             },
         )
 
-    def _extract_language(self, message: str) -> Optional[str]:
+    def _extract_language(self, message: str) -> str | None:
         """Extract target language from user message."""
         message_lower = message.lower()
 
@@ -266,7 +266,7 @@ Your resume has been translated and localized. Review the changes below:"""
 
         return None
 
-    def _extract_region(self, message: str) -> Optional[str]:
+    def _extract_region(self, message: str) -> str | None:
         """Extract target region from user message."""
         message_lower = message.lower()
 

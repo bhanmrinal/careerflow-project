@@ -1,13 +1,14 @@
 """Tests for data models."""
 
 from datetime import datetime
-from app.models.resume import Resume, ResumeSection, SectionType
+
 from app.models.conversation import (
+    AgentType,
     Conversation,
     Message,
     MessageRole,
-    AgentType,
 )
+from app.models.resume import Resume, ResumeSection, SectionType
 
 
 class TestResumeModels:

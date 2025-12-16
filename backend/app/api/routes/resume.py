@@ -4,16 +4,15 @@ Resume API Routes.
 Handles resume upload, parsing, and version management.
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-
 from app.models.chat import (
     FileUploadResponse,
     ResumeVersionResponse,
     VersionCompareResponse,
 )
-from app.services.resume_parser import ResumeParserService
 from app.services.firebase_service import get_storage_service
+from app.services.resume_parser import ResumeParserService
 from app.services.vector_store import VectorStoreService
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 

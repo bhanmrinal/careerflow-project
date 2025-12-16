@@ -7,14 +7,13 @@ functionality for LLM interaction, context management, and result formatting.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
-
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from typing import Any
 
 from app.core.llm import get_llm
+from app.models.conversation import AgentType, Conversation
 from app.models.resume import Resume, ResumeSection
-from app.models.conversation import Conversation, AgentType
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 
 @dataclass
@@ -23,7 +22,7 @@ class AgentResult:
 
     success: bool
     message: str
-    updated_resume: Optional[Resume] = None
+    updated_resume: Resume | None = None
     updated_sections: list[ResumeSection] = field(default_factory=list)
     changes: list[dict[str, Any]] = field(default_factory=list)
     reasoning: str = ""
@@ -51,7 +50,7 @@ class BaseAgent(ABC):
         Args:
             temperature: LLM sampling temperature.
         """
-        self._llm: Optional[BaseChatModel] = None
+        self._llm: BaseChatModel | None = None
         self.temperature = temperature
 
     @property
@@ -92,7 +91,7 @@ class BaseAgent(ABC):
         self,
         system_prompt: str,
         user_prompt: str,
-        conversation_history: Optional[list[tuple[str, str]]] = None,
+        conversation_history: list[tuple[str, str]] | None = None,
     ) -> str:
         """
         Invoke the LLM with the given prompts.
@@ -150,6 +149,7 @@ class BaseAgent(ABC):
             List of updated ResumeSection objects.
         """
         import re
+
         from app.models.resume import SectionType
 
         sections = []

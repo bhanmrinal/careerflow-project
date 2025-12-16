@@ -4,15 +4,15 @@ Careerflow Resume Optimization System - Main Application.
 A conversational AI system for resume optimization using specialized agents.
 """
 
+import os
 from contextlib import asynccontextmanager
+
+from app.api.routes import chat_router, conversation_router, resume_router
+from app.core.config import get_settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-import os
-
-from app.core.config import get_settings
-from app.api.routes import chat_router, resume_router, conversation_router
+from fastapi.staticfiles import StaticFiles
 
 
 @asynccontextmanager

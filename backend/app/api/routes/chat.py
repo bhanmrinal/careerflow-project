@@ -4,26 +4,24 @@ Chat API Routes.
 Handles the main chat interface for conversational resume optimization.
 """
 
-from typing import Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
-
-from app.models.chat import ChatRequest, ChatResponse, AgentAction
+from app.agents.router import ConversationRouter
+from app.models.chat import AgentAction, ChatRequest, ChatResponse
 from app.models.conversation import (
+    AgentType,
+    Conversation,
     Message,
     MessageRole,
-    Conversation,
-    AgentType,
 )
-from app.agents.router import ConversationRouter
 from app.services.firebase_service import (
     get_storage_service,
 )
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-_router_instance: Optional[ConversationRouter] = None
+_router_instance: ConversationRouter | None = None
 _storage_instance = None
 _conversations: dict[str, Conversation] = {}
 _resumes: dict[str, any] = {}

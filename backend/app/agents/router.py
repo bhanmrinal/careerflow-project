@@ -6,15 +6,15 @@ based on intent classification and conversation context.
 """
 
 import re
-from typing import Any, Optional
+from typing import Any
 
-from app.core.llm import get_llm
-from app.models.conversation import Conversation, AgentType
-from app.models.resume import Resume
-from app.agents.base import BaseAgent, AgentResult
+from app.agents.base import AgentResult, BaseAgent
 from app.agents.company_research import CompanyResearchAgent
 from app.agents.job_matching import JobMatchingAgent
 from app.agents.translation import TranslationAgent
+from app.core.llm import get_llm
+from app.models.conversation import AgentType, Conversation
+from app.models.resume import Resume
 
 
 class ConversationRouter:
@@ -84,7 +84,7 @@ class ConversationRouter:
     async def route(
         self,
         user_message: str,
-        resume: Optional[Resume],
+        resume: Resume | None,
         conversation: Conversation,
         context: dict[str, Any],
     ) -> AgentResult:

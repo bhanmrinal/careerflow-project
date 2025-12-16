@@ -6,17 +6,16 @@ resumes, and resume versions.
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
 from app.core.config import get_settings
 from app.models.conversation import (
+    AgentType,
     Conversation,
     Message,
     MessageRole,
-    AgentType,
 )
-from app.models.resume import Resume, ResumeVersion, ResumeSection
+from app.models.resume import Resume, ResumeSection, ResumeVersion
 
 
 class FirebaseService:
@@ -38,7 +37,8 @@ class FirebaseService:
 
         try:
             import firebase_admin
-            from firebase_admin import credentials as fb_credentials, firestore
+            from firebase_admin import credentials as fb_credentials
+            from firebase_admin import firestore
 
             if not firebase_admin._apps:
                 cred = fb_credentials.Certificate(credentials)
@@ -59,7 +59,7 @@ class FirebaseService:
     # ==================== Conversation Operations ====================
 
     async def create_conversation(
-        self, user_id: str, resume_id: Optional[str] = None
+        self, user_id: str, resume_id: str | None = None
     ) -> Conversation:
         """Create a new conversation."""
         conversation = Conversation(
@@ -77,7 +77,7 @@ class FirebaseService:
 
         return conversation
 
-    async def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
+    async def get_conversation(self, conversation_id: str) -> Conversation | None:
         """Get a conversation by ID."""
         db = self._get_db()
         if not db:
@@ -107,9 +107,9 @@ class FirebaseService:
         conversation_id: str,
         role: MessageRole,
         content: str,
-        agent_type: Optional[AgentType] = None,
-        reasoning: Optional[str] = None,
-        actions: Optional[list[dict]] = None,
+        agent_type: AgentType | None = None,
+        reasoning: str | None = None,
+        actions: list[dict] | None = None,
     ) -> Message:
         """Add a message to a conversation."""
         message = Message(
@@ -155,7 +155,7 @@ class FirebaseService:
 
         return resume
 
-    async def get_resume(self, resume_id: str) -> Optional[Resume]:
+    async def get_resume(self, resume_id: str) -> Resume | None:
         """Get a resume by ID."""
         db = self._get_db()
         if not db:
@@ -188,8 +188,8 @@ class FirebaseService:
         content: str,
         sections: list[ResumeSection],
         changes_description: str,
-        agent_used: Optional[str] = None,
-        parent_version_id: Optional[str] = None,
+        agent_used: str | None = None,
+        parent_version_id: str | None = None,
     ) -> ResumeVersion:
         """Create a new resume version."""
         version_number = await self._get_next_version_number(resume_id)
@@ -227,7 +227,7 @@ class FirebaseService:
 
         return [self._dict_to_version(doc.to_dict()) for doc in docs]
 
-    async def get_resume_version(self, version_id: str) -> Optional[ResumeVersion]:
+    async def get_resume_version(self, version_id: str) -> ResumeVersion | None:
         """Get a specific resume version."""
         db = self._get_db()
         if not db:
@@ -390,7 +390,7 @@ class InMemoryStore:
         self.versions: dict[str, ResumeVersion] = {}
 
     async def create_conversation(
-        self, user_id: str, resume_id: Optional[str] = None
+        self, user_id: str, resume_id: str | None = None
     ) -> Conversation:
         conversation = Conversation(
             id=str(uuid4()),
@@ -400,7 +400,7 @@ class InMemoryStore:
         self.conversations[conversation.id] = conversation
         return conversation
 
-    async def get_conversation(self, conversation_id: str) -> Optional[Conversation]:
+    async def get_conversation(self, conversation_id: str) -> Conversation | None:
         return self.conversations.get(conversation_id)
 
     async def update_conversation(self, conversation: Conversation) -> Conversation:
@@ -412,7 +412,7 @@ class InMemoryStore:
         self.resumes[resume.id] = resume
         return resume
 
-    async def get_resume(self, resume_id: str) -> Optional[Resume]:
+    async def get_resume(self, resume_id: str) -> Resume | None:
         return self.resumes.get(resume_id)
 
     async def update_resume(self, resume: Resume) -> Resume:
@@ -427,8 +427,8 @@ class InMemoryStore:
         content: str,
         sections: list[ResumeSection],
         changes_description: str,
-        agent_used: Optional[str] = None,
-        parent_version_id: Optional[str] = None,
+        agent_used: str | None = None,
+        parent_version_id: str | None = None,
     ) -> ResumeVersion:
         existing_versions = [
             v for v in self.versions.values() if v.resume_id == resume_id

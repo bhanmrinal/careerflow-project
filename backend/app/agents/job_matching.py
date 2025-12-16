@@ -6,11 +6,11 @@ resume content to highlight relevant experience and identify skill gaps.
 """
 
 import re
-from typing import Any, Optional
+from typing import Any
 
-from app.agents.base import BaseAgent, AgentResult
+from app.agents.base import AgentResult, BaseAgent
+from app.models.conversation import AgentType, Conversation
 from app.models.resume import Resume
-from app.models.conversation import Conversation, AgentType
 from app.services.vector_store import VectorStoreService
 
 
@@ -134,7 +134,7 @@ Output Format:
             },
         )
 
-    def _extract_job_description(self, message: str) -> Optional[str]:
+    def _extract_job_description(self, message: str) -> str | None:
         """Extract job description from user message."""
         jd_indicators = [
             "job description:",

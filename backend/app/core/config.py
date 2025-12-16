@@ -9,7 +9,6 @@ Supports multiple LLM providers:
 
 from enum import Enum
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -55,15 +54,15 @@ class Settings(BaseSettings):
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Firebase
-    firebase_project_id: Optional[str] = None
-    firebase_private_key_id: Optional[str] = None
-    firebase_private_key: Optional[str] = None
-    firebase_client_email: Optional[str] = None
-    firebase_client_id: Optional[str] = None
+    firebase_project_id: str | None = None
+    firebase_private_key_id: str | None = None
+    firebase_private_key: str | None = None
+    firebase_client_email: str | None = None
+    firebase_client_id: str | None = None
     firebase_auth_uri: str = "https://accounts.google.com/o/oauth2/auth"
     firebase_token_uri: str = "https://oauth2.googleapis.com/token"
     firebase_auth_provider_cert_url: str = "https://www.googleapis.com/oauth2/v1/certs"
-    firebase_client_cert_url: Optional[str] = None
+    firebase_client_cert_url: str | None = None
 
     # ChromaDB
     chroma_persist_directory: str = "./chroma_db"

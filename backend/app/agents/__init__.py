@@ -7,11 +7,11 @@ Each agent is responsible for a specific type of resume optimization:
 - TranslationAgent: Translate and localize resumes
 """
 
-from app.agents.base import BaseAgent, AgentResult
+from app.agents.base import AgentResult, BaseAgent
 from app.agents.company_research import CompanyResearchAgent
 from app.agents.job_matching import JobMatchingAgent
-from app.agents.translation import TranslationAgent
 from app.agents.router import ConversationRouter
+from app.agents.translation import TranslationAgent
 
 __all__ = [
     "BaseAgent",

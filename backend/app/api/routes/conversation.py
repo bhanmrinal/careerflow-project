@@ -4,10 +4,9 @@ Conversation API Routes.
 Handles conversation history and management.
 """
 
-from fastapi import APIRouter, HTTPException
-
 from app.models.chat import ConversationHistoryResponse
 from app.services.firebase_service import get_storage_service
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/conversation", tags=["conversation"])
 

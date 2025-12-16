@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -42,7 +42,7 @@ class Resume(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    def get_section(self, section_type: SectionType) -> Optional[ResumeSection]:
+    def get_section(self, section_type: SectionType) -> ResumeSection | None:
         """Get a specific section by type."""
         for section in self.sections:
             if section.section_type == section_type:
@@ -68,6 +68,6 @@ class ResumeVersion(BaseModel):
     content: str
     sections: list[ResumeSection] = Field(default_factory=list)
     changes_description: str = ""
-    agent_used: Optional[str] = None
+    agent_used: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    parent_version_id: Optional[str] = None
+    parent_version_id: str | None = None

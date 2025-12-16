@@ -4,15 +4,13 @@ Vector Store Service.
 Handles ChromaDB operations for semantic search and resume content retrieval.
 """
 
-from typing import Optional
 from uuid import uuid4
 
 import chromadb
-from chromadb.config import Settings as ChromaSettings
-
 from app.core.config import get_settings
 from app.core.llm import get_embeddings
 from app.models.resume import Resume
+from chromadb.config import Settings as ChromaSettings
 
 
 class VectorStoreService:
@@ -20,7 +18,7 @@ class VectorStoreService:
 
     def __init__(self):
         self.settings = get_settings()
-        self._client: Optional[chromadb.Client] = None
+        self._client: chromadb.Client | None = None
         self._embeddings = None
 
     @property
@@ -99,7 +97,7 @@ class VectorStoreService:
             )
 
     async def search_resume_content(
-        self, query: str, resume_id: Optional[str] = None, n_results: int = 5
+        self, query: str, resume_id: str | None = None, n_results: int = 5
     ) -> list[dict]:
         """
         Search for relevant resume content.
@@ -150,7 +148,7 @@ class VectorStoreService:
         title: str,
         company: str,
         description: str,
-        requirements: Optional[str] = None,
+        requirements: str | None = None,
     ) -> None:
         """
         Index a job description for matching.
