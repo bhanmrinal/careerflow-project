@@ -1,18 +1,17 @@
 """
 LLM Factory Module.
 
-Provides LLM and embedding instances using Groq API (Llama 3.3 70B, Mixtral 8x7B).
+Provides LLM instances using Groq API (Llama 3.3 70B, Mixtral 8x7B).
+Embeddings are handled directly by ChromaDB's built-in embedding function.
 """
 
 from app.core.config import Settings, get_settings
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 from langchain_groq import ChatGroq
 
 
 class LLMFactory:
-    """Factory class for creating LLM and embedding instances."""
+    """Factory class for creating LLM instances."""
 
     def __init__(self, settings: Settings | None = None):
         self.settings = settings or get_settings()
@@ -43,19 +42,6 @@ class LLMFactory:
             max_tokens=4096,
         )
 
-    def create_embeddings(self) -> Embeddings:
-        """
-        Create an embeddings instance using sentence-transformers.
-
-        Returns:
-            A LangChain HuggingFaceEmbeddings instance.
-        """
-        return HuggingFaceEmbeddings(
-            model_name=self.settings.embedding_model,
-            model_kwargs={"device": "cpu"},
-            encode_kwargs={"normalize_embeddings": True},
-        )
-
 
 def get_llm(temperature: float = 0.7) -> BaseChatModel:
     """
@@ -69,14 +55,3 @@ def get_llm(temperature: float = 0.7) -> BaseChatModel:
     """
     factory = LLMFactory()
     return factory.create_llm(temperature)
-
-
-def get_embeddings() -> Embeddings:
-    """
-    Get a sentence-transformers embeddings instance.
-
-    Returns:
-        A LangChain HuggingFaceEmbeddings instance.
-    """
-    factory = LLMFactory()
-    return factory.create_embeddings()

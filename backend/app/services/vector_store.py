@@ -2,15 +2,17 @@
 Vector Store Service.
 
 Handles ChromaDB operations for semantic search and resume content retrieval.
+Uses ChromaDB's built-in embedding function (all-MiniLM-L6-v2 via onnxruntime)
+which is much lighter than sentence-transformers with PyTorch.
 """
 
 from uuid import uuid4
 
 import chromadb
 from app.core.config import get_settings
-from app.core.llm import get_embeddings
 from app.models.resume import Resume
 from chromadb.config import Settings as ChromaSettings
+from chromadb.utils import embedding_functions
 
 
 class VectorStoreService:
@@ -19,13 +21,12 @@ class VectorStoreService:
     def __init__(self):
         self.settings = get_settings()
         self._client: chromadb.Client | None = None
-        self._embeddings = None
+        self._embedding_function = None
 
     @property
     def client(self) -> chromadb.Client:
         """Lazy initialization of ChromaDB client."""
         if self._client is None:
-            # Use the new PersistentClient API (ChromaDB 0.4+)
             self._client = chromadb.PersistentClient(
                 path=self.settings.chroma_persist_directory,
                 settings=ChromaSettings(anonymized_telemetry=False),
@@ -33,16 +34,24 @@ class VectorStoreService:
         return self._client
 
     @property
-    def embeddings(self):
-        """Lazy initialization of embeddings model."""
-        if self._embeddings is None:
-            self._embeddings = get_embeddings()
-        return self._embeddings
+    def embedding_function(self):
+        """
+        Lazy initialization of embedding function.
+        Uses ChromaDB's default embedding function (all-MiniLM-L6-v2 via onnxruntime).
+        This is much lighter than sentence-transformers with PyTorch.
+        """
+        if self._embedding_function is None:
+            self._embedding_function = (
+                embedding_functions.DefaultEmbeddingFunction()
+            )
+        return self._embedding_function
 
     def _get_or_create_collection(self, name: str):
-        """Get or create a ChromaDB collection."""
+        """Get or create a ChromaDB collection with embedding function."""
         return self.client.get_or_create_collection(
-            name=name, metadata={"hnsw:space": "cosine"}
+            name=name,
+            embedding_function=self.embedding_function,
+            metadata={"hnsw:space": "cosine"},
         )
 
     async def index_resume(self, resume: Resume) -> None:
@@ -86,10 +95,9 @@ class VectorStoreService:
                 )
 
         if documents:
-            embeddings = self.embeddings.embed_documents(documents)
+            # ChromaDB handles embeddings automatically via the collection's embedding_function
             collection.add(
                 documents=documents,
-                embeddings=embeddings,
                 metadatas=metadatas,
                 ids=ids,
             )
@@ -110,14 +118,13 @@ class VectorStoreService:
         """
         collection = self._get_or_create_collection("resumes")
 
-        query_embedding = self.embeddings.embed_query(query)
-
         where_filter = None
         if resume_id:
             where_filter = {"resume_id": resume_id}
 
+        # ChromaDB handles embedding the query automatically
         results = collection.query(
-            query_embeddings=[query_embedding],
+            query_texts=[query],
             n_results=n_results,
             where=where_filter,
             include=["documents", "metadatas", "distances"],
@@ -164,11 +171,8 @@ class VectorStoreService:
         if requirements:
             full_text += f"\n\nRequirements:\n{requirements}"
 
-        embedding = self.embeddings.embed_query(full_text)
-
         collection.add(
             documents=[full_text],
-            embeddings=[embedding],
             metadatas=[
                 {
                     "job_id": job_id,
@@ -194,10 +198,8 @@ class VectorStoreService:
         """
         collection = self._get_or_create_collection("job_descriptions")
 
-        query_embedding = self.embeddings.embed_query(resume_text)
-
         results = collection.query(
-            query_embeddings=[query_embedding],
+            query_texts=[resume_text],
             n_results=n_results,
             include=["documents", "metadatas", "distances"],
         )
@@ -250,7 +252,6 @@ class VectorStoreService:
                 content_parts.append(f"{key}: {', '.join(str(v) for v in value)}")
 
         full_content = "\n".join(content_parts)
-        embedding = self.embeddings.embed_query(full_content)
 
         # Convert list values to comma-separated strings for ChromaDB metadata
         clean_metadata = {"company_name": company_name}
@@ -264,7 +265,6 @@ class VectorStoreService:
 
         collection.upsert(
             documents=[full_content],
-            embeddings=[embedding],
             metadatas=[clean_metadata],
             ids=[company_name.lower().replace(" ", "_")],
         )
@@ -282,10 +282,8 @@ class VectorStoreService:
         """
         collection = self._get_or_create_collection("companies")
 
-        query_embedding = self.embeddings.embed_query(query)
-
         results = collection.query(
-            query_embeddings=[query_embedding],
+            query_texts=[query],
             n_results=n_results,
             include=["documents", "metadatas", "distances"],
         )

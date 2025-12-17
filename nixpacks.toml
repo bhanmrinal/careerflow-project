@@ -1,0 +1,20 @@
+# Nixpacks configuration for Railway
+# Optimized for smaller image size
+
+[phases.setup]
+nixPkgs = ["python312"]
+
+[phases.install]
+cmds = ["pip install --no-cache-dir -r requirements.txt"]
+
+[phases.build]
+cmds = ["echo 'Build complete'"]
+
+[start]
+cmd = "cd backend && python run.py"
+
+[variables]
+# Disable pip cache to reduce image size
+PIP_NO_CACHE_DIR = "1"
+# Use CPU-only versions where possible
+ONNXRUNTIME_PREFER_CPU = "1"

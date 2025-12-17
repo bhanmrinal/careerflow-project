@@ -1,0 +1,67 @@
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# Git
+.git/
+.gitignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+tests/
+
+# Local data (will be created fresh in container)
+chroma_db/
+uploads/
+output/
+*.db
+*.sqlite3
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+*.log
+*.tmp
+.env.local
+.env.development
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Lock files (Railway will install from requirements.txt)
+uv.lock
+poetry.lock
+Pipfile.lock
+
+# Large files
+*.pdf
+*.docx
+Resume_*.pdf

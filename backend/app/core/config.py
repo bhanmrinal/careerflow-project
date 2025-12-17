@@ -5,6 +5,7 @@ Uses Groq API for LLM inference (Llama 3.3 70B, Mixtral 8x7B).
 """
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
@@ -21,14 +22,14 @@ class Settings(BaseSettings):
 
     # Server
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8000  # Railway provides PORT env var, we'll handle it in run.py
 
     # Groq Configuration (Llama 3.3 70B, Mixtral 8x7B)
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
 
-    # Embedding Model (using sentence-transformers locally)
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    # Embeddings are handled by ChromaDB's built-in function (all-MiniLM-L6-v2 via onnxruntime)
+    # This is much lighter than sentence-transformers with PyTorch
 
     # Firebase
     firebase_project_id: str | None = None
@@ -50,7 +51,9 @@ class Settings(BaseSettings):
     allowed_extensions: list[str] = Field(default=["pdf", "docx"])
 
     class Config:
-        env_file = (".env", "../.env")
+        # Look for .env in project root (parent of backend/) first, then backend, then current dir
+        # This allows .env to be in the project root for Railway deployment
+        env_file = ("../.env", ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
 
@@ -67,8 +70,11 @@ class Settings(BaseSettings):
             return None
 
         private_key = self.firebase_private_key
+        # Handle both escaped and actual newlines
         if private_key and "\\n" in private_key:
             private_key = private_key.replace("\\n", "\n")
+        elif private_key and "\\\\n" in private_key:
+            private_key = private_key.replace("\\\\n", "\n")
 
         return {
             "type": "service_account",
