@@ -141,7 +141,20 @@ class FirebaseService:
         if not db:
             return []
 
-        docs = db.collection("conversations").where("user_id", "==", user_id).stream()
+        try:
+            from google.cloud.firestore_v1.base_query import FieldFilter
+
+            docs = (
+                db.collection("conversations")
+                .where(filter=FieldFilter("user_id", "==", user_id))
+                .stream()
+            )
+        except ImportError:
+            # Fallback for older versions
+            docs = (
+                db.collection("conversations").where("user_id", "==", user_id).stream()
+            )
+
         return [self._dict_to_conversation(doc.to_dict()) for doc in docs]
 
     # ==================== Resume Operations ====================
@@ -213,19 +226,40 @@ class FirebaseService:
         return version
 
     async def get_resume_versions(self, resume_id: str) -> list[ResumeVersion]:
-        """Get all versions of a resume."""
+        """Get all versions of a resume, sorted by version number."""
         db = self._get_db()
         if not db:
             return []
 
-        docs = (
-            db.collection("resume_versions")
-            .where("resume_id", "==", resume_id)
-            .order_by("version_number")
-            .stream()
-        )
+        try:
+            from google.cloud.firestore_v1.base_query import FieldFilter
 
-        return [self._dict_to_version(doc.to_dict()) for doc in docs]
+            # Query without order_by to avoid needing composite index
+            # We'll sort in Python instead
+            docs = (
+                db.collection("resume_versions")
+                .where(filter=FieldFilter("resume_id", "==", resume_id))
+                .stream()
+            )
+            versions = [self._dict_to_version(doc.to_dict()) for doc in docs]
+        except ImportError:
+            # Fallback for older versions
+            try:
+                docs = (
+                    db.collection("resume_versions")
+                    .where("resume_id", "==", resume_id)
+                    .stream()
+                )
+                versions = [self._dict_to_version(doc.to_dict()) for doc in docs]
+            except Exception as e:
+                print(f"Error fetching resume versions: {e}")
+                return []
+        except Exception as e:
+            print(f"Error fetching resume versions: {e}")
+            return []
+
+        # Sort in Python to avoid needing composite index
+        return sorted(versions, key=lambda v: v.version_number)
 
     async def get_resume_version(self, version_id: str) -> ResumeVersion | None:
         """Get a specific resume version."""
