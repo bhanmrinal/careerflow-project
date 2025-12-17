@@ -408,9 +408,7 @@ RECOMMENDATIONS:
 
         # If no recommendations found, generate defaults
         if not recommendations:
-            recommendations = self._generate_recommendations(
-                skill_gaps[:3], [], []
-            )
+            recommendations = self._generate_recommendations(skill_gaps[:3], [], [])
 
         return {
             "overall_score": round(overall, 1),
