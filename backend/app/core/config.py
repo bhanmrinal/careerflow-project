@@ -5,7 +5,6 @@ Uses Groq API for LLM inference (Llama 3.3 70B, Mixtral 8x7B).
 """
 
 from functools import lru_cache
-from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings

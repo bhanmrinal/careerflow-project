@@ -41,9 +41,7 @@ class VectorStoreService:
         This is much lighter than sentence-transformers with PyTorch.
         """
         if self._embedding_function is None:
-            self._embedding_function = (
-                embedding_functions.DefaultEmbeddingFunction()
-            )
+            self._embedding_function = embedding_functions.DefaultEmbeddingFunction()
         return self._embedding_function
 
     def _get_or_create_collection(self, name: str):

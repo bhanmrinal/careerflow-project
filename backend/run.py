@@ -11,7 +11,7 @@ from app.core.config import get_settings
 def main():
     """Run the application."""
     import os
-    
+
     settings = get_settings()
 
     # Use UTF-8 encoding for Windows console
