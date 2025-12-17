@@ -1,57 +1,42 @@
-"""Pytest configuration and fixtures."""
+"""
+Pytest configuration and shared fixtures.
+"""
+
+import os
+import sys
+from pathlib import Path
 
 import pytest
 
+# Add project root to path for imports
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "backend"))
 
-@pytest.fixture
-def sample_resume_text():
-    """Sample resume text for testing."""
-    return """
-John Doe
-Software Engineer
-john.doe@email.com | (555) 123-4567
+# Set UTF-8 encoding for Windows
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-SUMMARY
-Experienced software engineer with 5+ years of experience in Python and JavaScript.
-
-EXPERIENCE
-Senior Software Engineer | Tech Company | 2020-Present
-- Led development of microservices architecture
-- Improved system performance by 40%
-- Mentored junior developers
-
-Software Engineer | Startup Inc | 2018-2020
-- Built REST APIs using Python/FastAPI
-- Implemented CI/CD pipelines
-- Collaborated with cross-functional teams
-
-EDUCATION
-Bachelor of Science in Computer Science
-University of Technology | 2018
-
-SKILLS
-Python, JavaScript, TypeScript, FastAPI, React, AWS, Docker, Kubernetes
-"""
+# API base URL for integration tests
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000/api")
 
 
 @pytest.fixture
-def sample_job_description():
-    """Sample job description for testing."""
-    return """
-Senior Software Engineer
+def api_url():
+    """Return the API base URL."""
+    return API_BASE_URL
 
-We are looking for an experienced Software Engineer to join our team.
 
-Requirements:
-- 5+ years of experience in software development
-- Strong proficiency in Python
-- Experience with cloud services (AWS, GCP)
-- Knowledge of containerization (Docker, Kubernetes)
-- Excellent communication skills
+@pytest.fixture
+def project_root():
+    """Return the project root path."""
+    return PROJECT_ROOT
 
-Responsibilities:
-- Design and implement scalable systems
-- Lead technical projects
-- Mentor junior team members
-- Participate in code reviews
-"""
+
+@pytest.fixture
+def sample_resume_path(project_root):
+    """Return path to sample resume if exists."""
+    resume_path = project_root / "Resume_Mrinal_Bhan.pdf"
+    if resume_path.exists():
+        return resume_path
+    return None

@@ -2,10 +2,10 @@
 Conversation Router.
 
 Intelligently routes user messages to the appropriate specialized agent
-based on intent classification and conversation context.
+using LLM-based intent classification for robust, flexible routing.
 """
 
-import re
+import json
 from typing import Any
 
 from app.agents.base import AgentResult, BaseAgent
@@ -19,54 +19,82 @@ from app.models.resume import Resume
 
 class ConversationRouter:
     """
-    Routes conversations to appropriate specialized agents.
+    Routes conversations to appropriate specialized agents using LLM-based classification.
 
-    Responsibilities:
-    - Classify user intent from messages
-    - Maintain conversation context
-    - Route to appropriate agent
-    - Handle multi-agent workflows
-    - Manage fallback responses
+    Uses intelligent LLM routing instead of brittle regex patterns to:
+    - Handle natural language variations and edge cases
+    - Understand context and nuance in user requests
+    - Extract relevant parameters (company names, languages, etc.)
+    - Adapt to any company, language, or job description format
     """
 
-    INTENT_PATTERNS = {
-        AgentType.COMPANY_RESEARCH: [
-            r"optimize.*(?:for|at)\s+\w+",
-            r"(?:target|apply|applying).*company",
-            r"(?:google|amazon|microsoft|meta|apple|netflix|spotify|uber|airbnb)",
-            r"company\s+(?:culture|values|research)",
-            r"tailor.*(?:for|to)\s+\w+",
-        ],
-        AgentType.JOB_MATCHING: [
-            r"job\s+description",
-            r"match.*(?:job|position|role)",
-            r"(?:jd|job desc)",
-            r"skill\s+gap",
-            r"match\s+score",
-            r"requirements",
-            r"fit.*(?:job|position|role)",
-            r"ats",
-        ],
-        AgentType.TRANSLATION: [
-            r"translat",
-            r"(?:spanish|french|german|portuguese|italian|japanese|chinese|korean|arabic|hindi|russian|dutch)",
-            r"(?:spain|mexico|france|germany|brazil|japan|china|india)",
-            r"locali[sz]",
-            r"(?:foreign|international)\s+market",
-            r"(?:different|another)\s+language",
-        ],
+    ROUTING_SYSTEM_PROMPT = """You are an intelligent router for a resume optimization system. Your job is to analyze user messages and determine which specialized agent should handle the request.
+
+## Available Agents
+
+1. **JOB_MATCHING** - Use when the user:
+   - Provides or references a job description, job posting, or JD
+   - Asks to match/compare their resume against a specific role
+   - Wants to know how well they fit a position
+   - Asks about skill gaps for a specific job
+   - Mentions ATS optimization for a job posting
+   - Pastes text that looks like a job listing (has requirements, responsibilities, qualifications)
+
+2. **COMPANY_RESEARCH** - Use when the user:
+   - Wants to optimize their resume for a specific company (by name)
+   - Asks about tailoring resume to company culture/values
+   - Mentions applying to or targeting a specific organization
+   - Wants company-specific optimization WITHOUT a job description
+   - Examples: "optimize for Google", "tailor for Amazon", "I'm applying to Stripe"
+
+3. **TRANSLATION** - Use when the user:
+   - Wants to translate their resume to another language
+   - Mentions a specific country/region's job market
+   - Asks about localization or adapting for international markets
+   - Mentions any language or country name in context of translation/adaptation
+
+4. **GENERAL** - Use when:
+   - The request doesn't clearly fit the above categories
+   - The user is asking a general question about the system
+   - The intent is ambiguous and needs clarification
+
+## Decision Rules
+- If user provides BOTH a company name AND a job description, choose JOB_MATCHING (the JD is more specific)
+- If user mentions translation/language AND a company, choose TRANSLATION (translation is the primary ask)
+- When in doubt between agents, prefer the more specific one (JOB_MATCHING > COMPANY_RESEARCH > GENERAL)
+
+## Response Format
+Respond with ONLY a valid JSON object (no markdown, no explanation):
+{
+    "agent": "JOB_MATCHING" | "COMPANY_RESEARCH" | "TRANSLATION" | "GENERAL",
+    "confidence": 0.0-1.0,
+    "reasoning": "brief explanation",
+    "extracted_params": {
+        "company_name": "string or null",
+        "target_language": "string or null", 
+        "target_region": "string or null",
+        "has_job_description": true/false
     }
+}"""
 
     def __init__(self):
         self._llm = None
+        self._routing_llm = None
         self._agents: dict[AgentType, BaseAgent] = {}
 
     @property
     def llm(self):
-        """Lazy initialization of LLM for intent classification."""
+        """Lazy initialization of LLM for agent processing."""
         if self._llm is None:
-            self._llm = get_llm(temperature=0.1)
+            self._llm = get_llm(temperature=0.7)
         return self._llm
+
+    @property
+    def routing_llm(self):
+        """Lazy initialization of LLM for routing (low temperature for consistency)."""
+        if self._routing_llm is None:
+            self._routing_llm = get_llm(temperature=0.1)
+        return self._routing_llm
 
     def _get_agent(self, agent_type: AgentType) -> BaseAgent:
         """Get or create an agent instance."""
@@ -108,9 +136,16 @@ class ConversationRouter:
                 metadata={"agent_type": AgentType.ROUTER.value},
             )
 
-        agent_type = await self._classify_intent(user_message, conversation, context)
+        agent_type, extracted_params = await self._classify_intent(
+            user_message, conversation, context
+        )
 
-        updated_context = self._extract_context(user_message, agent_type, context)
+        # Merge extracted params with existing context
+        updated_context = {**context, **extracted_params}
+
+        # Handle general/unclear queries
+        if agent_type is None:
+            return await self._handle_general_query(user_message, resume, conversation)
 
         agent = self._get_agent(agent_type)
         if not agent:
@@ -136,9 +171,15 @@ class ConversationRouter:
 
     async def _classify_intent(
         self, user_message: str, conversation: Conversation, context: dict[str, Any]
-    ) -> AgentType:
+    ) -> tuple[AgentType, dict[str, Any]]:
         """
-        Classify the user's intent to determine which agent to use.
+        Classify the user's intent using LLM-based routing.
+
+        Uses an LLM to understand the user's intent naturally, handling:
+        - Any company name (not just hardcoded ones)
+        - Any language or region
+        - Various ways of expressing the same intent
+        - Context from conversation history
 
         Args:
             user_message: The user's message.
@@ -146,134 +187,82 @@ class ConversationRouter:
             context: Additional context.
 
         Returns:
-            The appropriate AgentType.
+            Tuple of (AgentType, extracted_params dict).
         """
-        message_lower = user_message.lower()
-
-        for agent_type, patterns in self.INTENT_PATTERNS.items():
-            for pattern in patterns:
-                if re.search(pattern, message_lower):
-                    return agent_type
-
-        if context.get("target_company"):
-            return AgentType.COMPANY_RESEARCH
-        if context.get("job_description"):
-            return AgentType.JOB_MATCHING
-        if context.get("target_language"):
-            return AgentType.TRANSLATION
-
-        return await self._llm_classify_intent(user_message, conversation)
-
-    async def _llm_classify_intent(
-        self, user_message: str, conversation: Conversation
-    ) -> AgentType:
-        """Use LLM to classify intent when patterns don't match."""
         recent_messages = conversation.get_history(limit=3)
-        history_context = "\n".join(
-            f"{msg.role.value}: {msg.content[:100]}" for msg in recent_messages
+        history_context = ""
+        if recent_messages:
+            history_context = "Recent conversation:\n" + "\n".join(
+                f"- {msg.role.value}: {msg.content[:150]}..." for msg in recent_messages
+            )
+
+        # Truncate very long messages (like job descriptions) for routing
+        message_preview = (
+            user_message[:1500] + "..." if len(user_message) > 1500 else user_message
         )
 
-        prompt = f"""Classify the user's intent for resume optimization.
+        routing_prompt = f"""{self.ROUTING_SYSTEM_PROMPT}
 
-Recent conversation:
 {history_context}
 
-Current user message: "{user_message}"
+Current user message:
+\"\"\"
+{message_preview}
+\"\"\"
 
-Available intents:
-1. COMPANY_RESEARCH - User wants to optimize resume for a specific company
-2. JOB_MATCHING - User wants to match resume to a job description or analyze fit
-3. TRANSLATION - User wants to translate or localize resume for a different market/language
+Analyze this message and respond with the JSON classification."""
 
-Respond with ONLY one of: COMPANY_RESEARCH, JOB_MATCHING, TRANSLATION, or GENERAL
-If the intent is unclear or doesn't fit the above categories, respond with GENERAL."""
+        try:
+            response = await self.routing_llm.ainvoke(routing_prompt)
+            result = self._parse_routing_response(response.content)
+            return result
+        except Exception as e:
+            # Fallback: if LLM routing fails, default to company research
+            return AgentType.COMPANY_RESEARCH, {"error": str(e)}
 
-        response = await self.llm.ainvoke(prompt)
-        intent_str = response.content.strip().upper()
+    def _parse_routing_response(
+        self, response_text: str
+    ) -> tuple[AgentType, dict[str, Any]]:
+        """Parse the LLM routing response and extract agent type and parameters."""
+        # Clean up the response - remove markdown code blocks if present
+        cleaned = response_text.strip()
+        if cleaned.startswith("```"):
+            # Remove markdown code block
+            lines = cleaned.split("\n")
+            cleaned = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
 
-        intent_mapping = {
-            "COMPANY_RESEARCH": AgentType.COMPANY_RESEARCH,
+        try:
+            data = json.loads(cleaned)
+        except json.JSONDecodeError:
+            # Try to extract JSON from the response
+            import re
+
+            json_match = re.search(r"\{[^{}]*\}", response_text, re.DOTALL)
+            if json_match:
+                try:
+                    data = json.loads(json_match.group())
+                except json.JSONDecodeError:
+                    return AgentType.COMPANY_RESEARCH, {"parse_error": True}
+            else:
+                return AgentType.COMPANY_RESEARCH, {"parse_error": True}
+
+        # Map agent string to AgentType
+        agent_mapping = {
             "JOB_MATCHING": AgentType.JOB_MATCHING,
+            "COMPANY_RESEARCH": AgentType.COMPANY_RESEARCH,
             "TRANSLATION": AgentType.TRANSLATION,
+            "GENERAL": None,  # Will trigger general handler
         }
 
-        return intent_mapping.get(intent_str, AgentType.COMPANY_RESEARCH)
+        agent_str = data.get("agent", "GENERAL").upper()
+        agent_type = agent_mapping.get(agent_str)
 
-    def _extract_context(
-        self, user_message: str, agent_type: AgentType, existing_context: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Extract relevant context from the user message."""
-        context = {**existing_context}
+        # Extract parameters
+        extracted_params = data.get("extracted_params", {})
+        extracted_params["confidence"] = data.get("confidence", 0.5)
+        extracted_params["reasoning"] = data.get("reasoning", "")
 
-        if agent_type == AgentType.COMPANY_RESEARCH:
-            company_patterns = [
-                r"(?:for|at|to)\s+([A-Z][A-Za-z0-9\s&]+?)(?:\s*$|\s*\.|\s*,)",
-                r"(Google|Amazon|Microsoft|Meta|Apple|Netflix|Spotify|Uber|Airbnb|Tesla|IBM|Oracle|Salesforce)",
-            ]
-            for pattern in company_patterns:
-                match = re.search(pattern, user_message, re.IGNORECASE)
-                if match:
-                    context["target_company"] = match.group(1).strip()
-                    break
-
-        elif agent_type == AgentType.JOB_MATCHING:
-            jd_indicators = [
-                "job description:",
-                "jd:",
-                "requirements:",
-                "responsibilities:",
-            ]
-            message_lower = user_message.lower()
-            for indicator in jd_indicators:
-                if indicator in message_lower:
-                    idx = message_lower.find(indicator)
-                    context["job_description"] = user_message[idx:]
-                    break
-
-            if "job_description" not in context and len(user_message) > 200:
-                context["job_description"] = user_message
-
-        elif agent_type == AgentType.TRANSLATION:
-            languages = [
-                "spanish",
-                "french",
-                "german",
-                "portuguese",
-                "italian",
-                "japanese",
-                "chinese",
-                "korean",
-                "arabic",
-                "hindi",
-                "russian",
-                "dutch",
-            ]
-            message_lower = user_message.lower()
-            for lang in languages:
-                if lang in message_lower:
-                    context["target_language"] = lang
-                    break
-
-            regions = [
-                "Spain",
-                "Mexico",
-                "France",
-                "Germany",
-                "Brazil",
-                "Japan",
-                "China",
-                "India",
-                "UAE",
-                "Canada",
-                "Argentina",
-                "Italy",
-            ]
-            for region in regions:
-                if region.lower() in message_lower:
-                    context["target_region"] = region
-                    break
-
-        return context
+        return agent_type, extracted_params
 
     async def _handle_general_query(
         self, user_message: str, resume: Resume, conversation: Conversation

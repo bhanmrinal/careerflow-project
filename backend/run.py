@@ -3,6 +3,7 @@ Entry point for running the Careerflow Resume Optimization System.
 """
 
 import sys
+
 import uvicorn
 from app.core.config import get_settings
 
@@ -29,8 +30,7 @@ def main():
 
     print(f"Server: http://{settings.host}:{settings.port}")
     print(f"API Docs: http://{settings.host}:{settings.port}/docs")
-    print(f"LLM Provider: {settings.llm_provider.value}")
-    print(f"Model: {settings.current_llm_model}")
+    print(f"LLM: Groq ({settings.groq_model})")
     print()
 
     uvicorn.run(

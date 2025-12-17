@@ -168,7 +168,10 @@ function setupEventListeners() {
     elements.closeSettings?.addEventListener('click', () => closeModal('settings-modal'));
     
     // Eval modal
-    elements.evalBtn?.addEventListener('click', () => openModal('eval-modal'));
+    elements.evalBtn?.addEventListener('click', () => {
+        openModal('eval-modal');
+        runAnalysis();
+    });
     elements.closeEval?.addEventListener('click', () => closeModal('eval-modal'));
 
     // Settings controls
@@ -656,7 +659,9 @@ function updateChangesPanel(changes) {
                 <span class="change-card-section">${change.section}</span>
                 <span class="change-type ${change.change_type}">${change.change_type}</span>
             </div>
-            <div class="change-card-content">${change.description || 'Content updated'}</div>
+            <div class="change-card-content">
+                ${change.new_content ? `<div class="new-content">${escapeHtml(change.new_content).substring(0, 300)}${change.new_content.length > 300 ? '...' : ''}</div>` : 'Content updated'}
+            </div>
         </div>
     `).join('');
 }
@@ -851,17 +856,126 @@ function resetSettings() {
 }
 
 // ========================================
+// Analysis Function
+// ========================================
+
+async function runAnalysis() {
+    if (!state.resumeId) {
+        document.getElementById('eval-summary').textContent = 'Please upload a resume first to run analysis.';
+        return;
+    }
+    
+    // Show loading state
+    document.getElementById('eval-overall').textContent = '...';
+    document.getElementById('eval-keywords').textContent = '...';
+    document.getElementById('eval-format').textContent = '...';
+    document.getElementById('eval-impact').textContent = '...';
+    document.getElementById('eval-summary').textContent = 'Analyzing your resume...';
+    
+    try {
+        const response = await fetch(`${API_BASE}/resume/${state.resumeId}/analyze`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        
+        if (!response.ok) {
+            throw new Error('Analysis failed');
+        }
+        
+        const data = await response.json();
+        
+        // Update evaluation state
+        state.evaluation = data.evaluation;
+        
+        // Update modal scores
+        document.getElementById('eval-overall').textContent = `${data.evaluation.overall}%`;
+        document.getElementById('eval-keywords').textContent = `${data.evaluation.keywords}%`;
+        document.getElementById('eval-format').textContent = `${data.evaluation.format}%`;
+        document.getElementById('eval-impact').textContent = `${data.evaluation.impact}%`;
+        
+        // Update progress bars
+        document.getElementById('overall-bar').style.width = `${data.evaluation.overall}%`;
+        document.getElementById('keywords-bar').style.width = `${data.evaluation.keywords}%`;
+        document.getElementById('format-bar').style.width = `${data.evaluation.format}%`;
+        document.getElementById('impact-bar').style.width = `${data.evaluation.impact}%`;
+        
+        // Update summary
+        document.getElementById('eval-summary').textContent = data.summary || 'Analysis complete.';
+        
+        // Update strengths and improvements
+        const strengthsList = document.getElementById('eval-strengths');
+        const improvementsList = document.getElementById('eval-improvements');
+        
+        if (strengthsList) {
+            strengthsList.innerHTML = data.strengths.map(s => `<li>${s}</li>`).join('');
+        }
+        if (improvementsList) {
+            improvementsList.innerHTML = data.improvements.map(i => `<li>${i}</li>`).join('');
+        }
+        
+        // Update the main evaluation display too
+        updateEvaluation(data.evaluation);
+        
+        // Update analysis tab
+        updateAnalysis({
+            strengths: data.strengths,
+            improvements: data.improvements,
+            keywords_found: data.keywords_found,
+            missing_keywords: data.missing_keywords
+        });
+        
+    } catch (error) {
+        document.getElementById('eval-summary').textContent = `Analysis failed: ${error.message}`;
+        console.error('Analysis error:', error);
+    }
+}
+
+// ========================================
 // Export Function
 // ========================================
 
-function handleExport() {
+async function handleExport() {
     if (!state.resumeId) {
         addSystemMessage('⚠️ Please upload a resume first');
         return;
     }
     
     addSystemMessage(`📥 Exporting resume as ${state.settings.exportFormat.toUpperCase()}...`);
-    // In a real implementation, this would call the backend to generate the export
+    
+    try {
+        const response = await fetch(`${API_BASE}/resume/${state.resumeId}/export?format=${state.settings.exportFormat}`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Export failed');
+        }
+        
+        // Check if it's a file download or JSON error
+        const contentType = response.headers.get('content-type');
+        if (contentType && (contentType.includes('application/pdf') || contentType.includes('application/vnd'))) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `resume_optimized.${state.settings.exportFormat}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            addSystemMessage(`✅ Resume exported successfully!`);
+        } else {
+            const data = await response.json();
+            if (data.error) {
+                addSystemMessage(`⚠️ ${data.error}. Content available as text.`);
+            }
+        }
+    } catch (error) {
+        addSystemMessage(`❌ Export failed: ${error.message}`);
+        console.error('Export error:', error);
+    }
 }
 
 // ========================================

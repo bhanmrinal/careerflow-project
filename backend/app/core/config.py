@@ -1,25 +1,13 @@
 """
 Application configuration using Pydantic Settings.
 
-Supports multiple LLM providers:
-- Groq (Llama 3.3, Mixtral) - Recommended, fast and free
-- HuggingFace Inference API
-- Local models via Ollama
+Uses Groq API for LLM inference (Llama 3.3 70B, Mixtral 8x7B).
 """
 
-from enum import Enum
 from functools import lru_cache
 
 from pydantic import Field
 from pydantic_settings import BaseSettings
-
-
-class LLMProvider(str, Enum):
-    """Supported LLM providers."""
-
-    GROQ = "groq"
-    HUGGINGFACE = "huggingface"
-    OLLAMA = "ollama"
 
 
 class Settings(BaseSettings):
@@ -35,22 +23,11 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
-    # LLM Provider Selection
-    llm_provider: LLMProvider = LLMProvider.GROQ
-
     # Groq Configuration (Llama 3.3 70B, Mixtral 8x7B)
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"  # Options: llama-3.3-70b-versatile, mixtral-8x7b-32768
+    groq_model: str = "llama-3.3-70b-versatile"
 
-    # HuggingFace Configuration
-    huggingface_api_key: str = ""
-    huggingface_model: str = "meta-llama/Llama-3.2-3B-Instruct"
-
-    # Ollama Configuration (Local)
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "llama3.2"
-
-    # Embedding Model (using HuggingFace for embeddings)
+    # Embedding Model (using sentence-transformers locally)
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Firebase
@@ -73,7 +50,7 @@ class Settings(BaseSettings):
     allowed_extensions: list[str] = Field(default=["pdf", "docx"])
 
     class Config:
-        env_file = (".env", "../.env")  # Look in current dir and parent dir
+        env_file = (".env", "../.env")
         env_file_encoding = "utf-8"
         extra = "ignore"
 
@@ -105,16 +82,6 @@ class Settings(BaseSettings):
             "auth_provider_x509_cert_url": self.firebase_auth_provider_cert_url,
             "client_x509_cert_url": self.firebase_client_cert_url,
         }
-
-    @property
-    def current_llm_model(self) -> str:
-        """Get the current LLM model name based on provider."""
-        provider_models = {
-            LLMProvider.GROQ: self.groq_model,
-            LLMProvider.HUGGINGFACE: self.huggingface_model,
-            LLMProvider.OLLAMA: self.ollama_model,
-        }
-        return provider_models.get(self.llm_provider, self.groq_model)
 
 
 @lru_cache

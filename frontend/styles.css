@@ -1251,6 +1251,16 @@ body {
     line-height: 1.6;
 }
 
+.change-card-content .new-content {
+    background: rgba(6, 182, 212, 0.1);
+    border-left: 2px solid var(--accent-cyan);
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .analysis-content {
     display: none;
 }
@@ -1590,6 +1600,73 @@ body {
     text-align: center;
     padding: 2rem;
     color: var(--text-muted);
+}
+
+.eval-summary-section {
+    margin-bottom: 1.5rem;
+}
+
+.eval-summary-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.eval-summary-section p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.eval-lists {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.eval-list-section h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.eval-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.eval-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.25rem;
+    position: relative;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.eval-list li:last-child {
+    border-bottom: none;
+}
+
+.eval-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.strengths-list li::before {
+    background: var(--success);
+}
+
+.improvements-list li::before {
+    background: var(--warning);
 }
 
 /* ========================================

@@ -1,6 +1,7 @@
 # Environment
 .env
 .env.local
+.env.*
 venv/
 env/
 .venv/
@@ -33,16 +34,21 @@ wheels/
 *.swp
 *.swo
 *~
+.cursor/
 
 # ChromaDB
 chroma_db/
+backend/chroma_db/
 
-# Firebase credentials
+# Firebase credentials (SENSITIVE - never commit)
 firebase-credentials.json
+backend/firebase-credentials.json
 *-firebase-adminsdk-*.json
 
-# Uploads
+# Uploads and Output
 uploads/
+backend/uploads/
+output/
 temp/
 
 # Logs
@@ -53,11 +59,14 @@ logs/
 .pytest_cache/
 .coverage
 htmlcov/
+.ruff_cache/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# PDF assignment
-*.pdf
+# Lock files (optional - can be committed for reproducibility)
+uv.lock
 
+# User resume files (don't commit personal data)
+Resume_*.pdf

@@ -25,8 +25,7 @@ async def lifespan(app: FastAPI):
     print(f"[START] {settings.app_name} starting...")
     print(f"[DIR] Upload directory: {settings.upload_directory}")
     print(f"[DB] ChromaDB directory: {settings.chroma_persist_directory}")
-    print(f"[LLM] Provider: {settings.llm_provider.value}")
-    print(f"[MODEL] {settings.current_llm_model}")
+    print(f"[LLM] Groq ({settings.groq_model})")
 
     yield
 
@@ -90,8 +89,7 @@ def create_app() -> FastAPI:
             "status": "healthy",
             "app": settings.app_name,
             "version": "1.0.0",
-            "llm_provider": settings.llm_provider.value,
-            "model": settings.current_llm_model,
+            "llm": f"Groq ({settings.groq_model})",
         }
 
     @app.get("/api/info")
@@ -107,7 +105,7 @@ def create_app() -> FastAPI:
                 "Translation & Localization",
             ],
             "supported_file_types": settings.allowed_extensions,
-            "llm_provider": settings.llm_provider.value,
+            "llm": f"Groq ({settings.groq_model})",
         }
 
     return app
