@@ -1,4 +1,4 @@
-# Careerflow Resume Optimization System
+# Resume Optimization System
 
 A conversational AI system for resume optimization using specialized agents. Built with FastAPI, LangChain, and Groq (Llama 3.3 70B).
 
